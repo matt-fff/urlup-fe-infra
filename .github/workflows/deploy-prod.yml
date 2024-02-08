@@ -5,9 +5,9 @@ on:
   workflow_call:
     secrets:
       AWS_IAM_ROLE:
-        required: true
+        required: false
       PULUMI_ACCESS_TOKEN:
-        required: true
+        required: false
   push:
     branches:
       - main
@@ -17,9 +17,9 @@ permissions:
   id-token: write
 
 jobs:
-  preview:
+  deploy:
     runs-on: ubuntu-latest
-    name: Pulumi Preview
+    name: Pulumi Deploy
     environment: pulumi
     permissions:
       contents: read

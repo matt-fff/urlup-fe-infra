@@ -5,9 +5,9 @@ on:
   workflow_call:
     secrets:
       AWS_IAM_ROLE:
-        required: true
+        required: false
       PULUMI_ACCESS_TOKEN:
-        required: true
+        required: false
   pull_request:
     branches:
       - main
