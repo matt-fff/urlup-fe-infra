@@ -2,6 +2,7 @@ name: Deploy Production
 run-name: Deploy ${{ github.ref_name }}
 
 on:
+  workflow_call: {}
   push:
     branches:
       - main
@@ -11,9 +12,9 @@ permissions:
   id-token: write
 
 jobs:
-  preview:
+  deploy:
     runs-on: ubuntu-latest
-    name: Pulumi Preview
+    name: Pulumi Deploy
     environment: pulumi
     permissions:
       contents: read
@@ -42,6 +43,7 @@ jobs:
       - name: Check out urlup-fe-infra
         uses: actions/checkout@v4
         with:
+          repository: matt-fff/urlup-fe-infra
           path: infra
 
       - uses: actions/setup-python@v5
