@@ -2,12 +2,7 @@ name: Deploy Pull Request
 run-name: Deploy ${{ github.ref_name }}
 
 on:
-  workflow_call:
-    secrets:
-      AWS_IAM_ROLE:
-        required: false
-      PULUMI_ACCESS_TOKEN:
-        required: false
+  workflow_call: {}
   pull_request:
     branches:
       - main
@@ -17,7 +12,7 @@ permissions:
   id-token: write
 
 jobs:
-  preview:
+  deploy:
     runs-on: ubuntu-latest
     name: Pulumi Deploy
     environment: pulumi

@@ -2,12 +2,7 @@ name: Cleanup Pull Request
 run-name: Cleanup ${{ github.ref_name }}
 
 on:
-  workflow_call:
-    secrets:
-      AWS_IAM_ROLE:
-        required: false
-      PULUMI_ACCESS_TOKEN:
-        required: false
+  workflow_call: {}
   pull_request:
     branches:
       - main
