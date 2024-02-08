@@ -38,6 +38,7 @@ jobs:
 
       - name: Build Frontend
         run: |
+          cd frontend
           npm install
           pulumi env run "${ESCENV}" npm run build
 
