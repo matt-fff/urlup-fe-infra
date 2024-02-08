@@ -1,0 +1,72 @@
+name: Deploy Production
+run-name: Deploy ${{ github.ref_name }}
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    name: Pulumi Preview
+    environment: pulumi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out urlup-fe
+        uses: actions/checkout@v4
+        with:
+          repository: matt-fff/urlup-fe
+          path: frontend
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Pulumi Login
+        run: pulumi login --non-interactive >/dev/null 2>&1
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          pulumi env run "${ESCENV}" npm run build
+
+      - name: Check out urlup-fe-infra
+        uses: actions/checkout@v4
+        with:
+          path: infra
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Build Infrastructure
+        run: pip install -r infra/requirements.txt
+
+      - name: AWS Authentication
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-session-name: gha-deploy
+          role-to-assume: ${{ secrets.PULUMI_IAM_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Pulumi Deploy
+        run: |
+          cd infra
+          pulumi stack select -c \
+            --stack "${STACK}"
+          pulumi up --non-interactive --yes
+
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      ESCENV: codefold/urlup-fe-dev
+      STACK: codefold/urlup-fe/dev

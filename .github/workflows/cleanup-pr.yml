@@ -1,0 +1,59 @@
+name: Cleanup Pull Request
+run-name: Cleanup ${{ github.ref_name }}
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    name: Pulumi Destroy
+    environment: pulumi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out urlup-fe-infra
+        uses: actions/checkout@v4
+        with:
+          path: infra
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Pulumi Login
+        run: pulumi login --non-interactive >/dev/null 2>&1
+
+      - name: Build Infrastructure
+        run: pip install -r infra/requirements.txt
+
+      - name: AWS Authentication
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-session-name: gha-deploy
+          role-to-assume: ${{ secrets.PULUMI_IAM_ROLE }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Pulumi Destroy
+        run: |
+          cd infra
+          ln -s Pulumi.pr.yaml "Pulumi.pr-${PR_NUM}.yaml"
+          pulumi stack select -c \
+            --stack "${STACKBASE}/pr-${PR_NUM}"
+          pulumi destroy --non-interactive --yes
+          pulumi stack rm --non-interactive --yes
+
+    env:
+      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      ESCENV: codefold/urlup-fe-pr
+      STACKBASE: codefold/urlup-fe
+      PR_NUM: ${{ github.event.number }}
